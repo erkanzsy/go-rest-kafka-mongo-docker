@@ -1,0 +1,42 @@
+version: '3.1'
+
+services:
+  kafka:
+    image: spotify/kafka
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+    container_name: go-example-kafka
+    environment:
+      - "ADVERTISED_HOST=localhost"
+      - "ADVERTISED_PORT=9092"
+      - "AUTO_CREATE_TOPICS=true"
+    command: >
+      bash -c
+      "(sleep 15s &&
+      /opt/kafka_2.11-0.10.1.0/bin/kafka-topics.sh
+      --create
+      --zookeeper
+      localhost:2181 --replication-factor 1 --partitions 1
+      --topic test-topic &) && (supervisord -n)"
+
+  mongo:
+    image: mongo:3.6-xenial
+    container_name: go-example-mongo
+    restart: on-failure
+    ports:
+      - "27017:27017"
+
+  rockmongo:
+    image: weshigbee/rockmongo
+    container_name: go-example-rockmongo
+    restart: on-failure
+    environment:
+      - MONGO_SERVER=mongo
+    ports:
+      - "8080:80"
+
+networks:
+  default:
+    external:
+      name: go-example
